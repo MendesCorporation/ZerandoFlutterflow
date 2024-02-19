@@ -1,0 +1,14 @@
+#SUM
+var1 + var2
+
+#VALIDATE EMAIL
+RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(var1)
+
+#FORMAT CNPJ
+var1.replaceAll(RegExp(r'[./-]'), '')
+
+#UPPER CASE
+var1.toUpperCase()
+
+#SUM LIST
+var1.reduce((valorAtual, proximoValor) => valorAtual + proximoValor)
