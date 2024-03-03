@@ -1,0 +1,66 @@
+import 'dart:convert';
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:timeago/timeago.dart' as timeago;
+import '/flutter_flow/lat_lng.dart';
+import '/flutter_flow/place.dart';
+import '/flutter_flow/uploaded_file.dart';
+import '/flutter_flow/custom_functions.dart';
+import '/backend/backend.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '/backend/schema/structs/index.dart';
+
+List<LocaisStruct>? calcularDistancia(
+  LatLng localAtual,
+  double raio,
+  List<LocaisStruct> locais,
+) {
+  /// MODIFY CODE ONLY BELOW THIS LINE
+
+  List<LocaisStruct> locaisDentroRaio = [];
+
+  double raioTerra = 6371; // Raio médio da Terra em quilômetros
+
+  double grausParaRadianos(double graus) {
+    return graus * (math.pi / 180); // Converte graus para radianos
+  }
+
+  double calcularDistanciaLatLng(LatLng ponto1, LatLng ponto2) {
+    double lat1Rad = grausParaRadianos(ponto1.latitude);
+    double lat2Rad = grausParaRadianos(ponto2.latitude);
+    double deltaLat = lat2Rad - lat1Rad;
+    double deltaLon = grausParaRadianos(ponto2.longitude - ponto1.longitude);
+
+    double a = math.sin(deltaLat / 2) * math.sin(deltaLat / 2) +
+        math.cos(lat1Rad) *
+            math.cos(lat2Rad) *
+            math.sin(deltaLon / 2) *
+            math.sin(deltaLon / 2);
+    double c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+
+    return raioTerra * c; // Retorna a distância em quilômetros
+  }
+
+  for (LocaisStruct local in locais) {
+    if (local.localizacao != null) {
+      double distancia =
+          calcularDistanciaLatLng(localAtual, local.localizacao!);
+
+      if (distancia <= raio) {
+        LocaisStruct localAtualizado = LocaisStruct(
+          nome: local.nome,
+          localizacao: local.localizacao,
+          distancia: distancia,
+        );
+        locaisDentroRaio.add(localAtualizado);
+      }
+    }
+  }
+
+  return locaisDentroRaio;
+
+  /// MODIFY CODE ONLY ABOVE THIS LINE
+}
