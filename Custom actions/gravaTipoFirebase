@@ -1,0 +1,47 @@
+// Automatic FlutterFlow imports
+import '/backend/backend.dart';
+import '/backend/schema/structs/index.dart';
+import '/backend/supabase/supabase.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/actions/index.dart'; // Imports other custom actions
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:flutter/material.dart';
+// Begin custom action code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+Future<void> gravaTipo(String nome, String dataNascimento) async {
+  // Converter a string de data de nascimento para um objeto DateTime
+  final DateFormat format = DateFormat('dd/MM/yyyy');
+  DateTime dataNasc = format.parse(dataNascimento);
+
+  // Calcular a idade
+  final DateTime agora = DateTime.now();
+  int idade = agora.year - dataNasc.year;
+  if (dataNasc.month > agora.month ||
+      (dataNasc.month == agora.month && dataNasc.day > agora.day)) {
+    idade--;
+  }
+
+  // Determinar a faixa etária
+  String tipo;
+  if (idade <= 2) {
+    tipo = 'Bebê';
+  } else if (idade <= 12) {
+    tipo = 'Criança';
+  } else if (idade <= 17) {
+    tipo = 'Adolescente';
+  } else {
+    tipo = 'Adulto';
+  }
+
+  // Gravar no Firebase
+  final collection = FirebaseFirestore.instance.collection('Faixa');
+  await collection.add({
+    'nome': nome,
+    'tipo': tipo,
+  });
+}
