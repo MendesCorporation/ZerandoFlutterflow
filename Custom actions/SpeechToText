@@ -1,0 +1,51 @@
+// Automatic FlutterFlow imports
+import '/backend/backend.dart';
+import '/backend/schema/structs/index.dart';
+import '/backend/supabase/supabase.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/actions/index.dart'; // Imports other custom actions
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:flutter/material.dart';
+// Begin custom action code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'dart:async';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+
+Future speech() async {
+  final completer = Completer(); // Usado para aguardar a conclusão da escuta
+  final stt.SpeechToText speech = stt.SpeechToText();
+
+  bool isInitialized = await speech.initialize();
+
+  if (isInitialized) {
+    final systemLocale = await speech.systemLocale();
+    final String _currentLocaleId = systemLocale?.localeId ?? '';
+
+    speech.listen(
+      onResult: (result) {
+        if (result.finalResult) {
+          FFAppState().update(() {
+            FFAppState().Texto = '${result.recognizedWords}';
+            completer.complete();
+          });
+        } else {
+          FFAppState().update(() {
+            FFAppState().Texto = '${result.recognizedWords}';
+          });
+        }
+      },
+      listenFor: Duration(seconds: 30),
+      pauseFor: Duration(seconds: 3),
+      partialResults: true,
+      localeId: _currentLocaleId,
+      onSoundLevelChange: (level) {},
+      cancelOnError: true,
+      listenMode: stt.ListenMode.confirmation,
+    );
+  }
+  return completer.future;
+}
+// Set your action name, define your arguments and return parameter,
+// and then add the boilerplate code using the green button on the right!
