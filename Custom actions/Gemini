@@ -1,0 +1,76 @@
+// Automatic FlutterFlow imports
+import '/backend/backend.dart';
+import '/backend/schema/structs/index.dart';
+import '/backend/supabase/supabase.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/actions/index.dart'; // Imports other custom actions
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:flutter/material.dart';
+// Begin custom action code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'package:http/http.dart' as http; // import the http package
+import 'dart:async';
+import 'dart:convert';
+
+Future<String> geminiIA(
+    String apiKeyGoogle, // the OpenAI API key to be used
+    String prompt) async {
+  print('o prompt é: $prompt');
+
+  final data = {
+    "contents": [
+      {
+        "parts": [
+          {"text": prompt}
+        ]
+      }
+    ],
+    "generationConfig": {
+      "temperature": 0.9,
+      "topK": 1,
+      "topP": 1,
+      "maxOutputTokens": 3000,
+      "stopSequences": []
+    },
+    "safetySettings": [
+      {
+        "category": "HARM_CATEGORY_HARASSMENT",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+      },
+      {
+        "category": "HARM_CATEGORY_HATE_SPEECH",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+      },
+      {
+        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+      },
+      {
+        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+      }
+    ]
+  };
+
+  final headers = {'Content-Type': 'application/json'};
+  final response = await http.post(
+    Uri.parse(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$apiKeyGoogle'),
+    headers: headers,
+    body: json.encode(data),
+  );
+
+  if (response.statusCode == 200) {
+    final jsonResponse = json.decode(response.body);
+    final String generatedText =
+        jsonResponse['candidates'][0]['content']['parts'][0]['text'];
+    return generatedText;
+  } else {
+    print(response.reasonPhrase);
+    return 'Erro de conexão. Por favor verifique sua conexão com a internet';
+  }
+}
+// Set your action name, define your arguments and return parameter,
+// and then add the boilerplate code using the green button on the right!
