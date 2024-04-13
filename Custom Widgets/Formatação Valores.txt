@@ -1,0 +1,95 @@
+// Automatic FlutterFlow imports
+import '/backend/backend.dart';
+import '/backend/schema/structs/index.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/widgets/index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:flutter/material.dart';
+// Begin custom widget code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'package:flutter/services.dart';
+
+class FormatacaoValores extends StatefulWidget {
+  const FormatacaoValores({
+    Key? key,
+    this.width,
+    this.height,
+    required this.radius,
+    required this.cor,
+  }) : super(key: key);
+
+  final double? width;
+  final double? height;
+  final double radius;
+  final Color cor;
+
+  @override
+  _FormatacaoValoresState createState() => _FormatacaoValoresState();
+}
+
+class _FormatacaoValoresState extends State<FormatacaoValores> {
+  double radius = 0.0;
+  Color cor = Colors.black;
+  final formatter = NumberFormat("#,##0.00", "pt_BR");
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(() {
+      final text = _controller.text;
+      _controller.value = _controller.value.copyWith(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+        composing: TextRange.empty,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: _controller,
+      decoration: InputDecoration(
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(widget.radius),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(widget.radius),
+          borderSide: BorderSide(color: widget.cor),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(widget.radius),
+          borderSide: BorderSide(color: widget.cor),
+        ),
+      ),
+      keyboardType: TextInputType.number,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        TextInputFormatter.withFunction((oldValue, newValue) {
+          if (newValue.text.isEmpty) {
+            return newValue.copyWith(text: '');
+          } else if (newValue.text.compareTo(oldValue.text) != 0) {
+            final int selectionIndexFromTheRight =
+                newValue.text.length - newValue.selection.extentOffset;
+            final f = NumberFormat("#,##0.00", "pt_BR");
+            final number =
+                int.parse(newValue.text.replaceAll(f.symbols.GROUP_SEP, ''));
+            final newString = f.format(number / 100);
+            FFAppState().ValorFormatado = number / 100; // Moved this line here
+            return TextEditingValue(
+              text: newString,
+              selection: TextSelection.collapsed(
+                  offset: newString.length - selectionIndexFromTheRight),
+            );
+          } else {
+            return newValue;
+          }
+        }),
+      ],
+    );
+  }
+}

@@ -1,0 +1,50 @@
+// Automatic FlutterFlow imports
+import '/backend/backend.dart';
+import '/backend/schema/structs/index.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/widgets/index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:flutter/material.dart';
+// Begin custom widget code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'dart:typed_data';
+import 'dart:convert';
+
+class Base64 extends StatefulWidget {
+  const Base64({
+    Key? key,
+    this.width,
+    this.height,
+    required this.base64Image,
+  }) : super(key: key);
+
+  final double? width;
+  final double? height;
+  final String base64Image;
+
+  @override
+  _ImprimirQRCodeState createState() => _ImprimirQRCodeState();
+}
+
+class _ImprimirQRCodeState extends State<Base64> {
+  late Image image;
+
+  @override
+  void initState() {
+    super.initState();
+    Uint8List bytes = base64Decode(widget.base64Image);
+    image = Image.memory(bytes);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: widget.width,
+      height: widget.height,
+      child: image,
+    );
+  }
+}
