@@ -1,0 +1,68 @@
+// Automatic FlutterFlow imports
+import '/backend/backend.dart';
+import '/backend/schema/structs/index.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/widgets/index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:flutter/material.dart';
+// Begin custom widget code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'package:just_audio/just_audio.dart';
+
+class SoundPlayerMain extends StatefulWidget {
+  const SoundPlayerMain({
+    super.key,
+    this.width,
+    this.height,
+    required this.url,
+  });
+
+  final double? width;
+  final double? height;
+  final String url;
+
+  @override
+  _SoundPlayerMainState createState() => _SoundPlayerMainState();
+}
+
+class _SoundPlayerMainState extends State<SoundPlayerMain> {
+  final _player = AudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    _initAndPlay();
+  }
+
+  @override
+  void didUpdateWidget(covariant SoundPlayerMain oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.url != oldWidget.url) {
+      _initAndPlay();
+    }
+  }
+
+  void _initAndPlay() async {
+    await _player.setUrl(widget.url);
+    _player.play();
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: widget.width,
+      height: widget.height,
+    );
+  }
+}
+// Set your widget name, define your parameter, and then add the
+// boilerplate code using the green button on the right!
