@@ -1,0 +1,92 @@
+// Automatic FlutterFlow imports
+import '/backend/backend.dart';
+import '/backend/schema/structs/index.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/widgets/index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:flutter/material.dart';
+// Begin custom widget code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import '/components/area1_widget.dart';
+import '/components/area2_widget.dart';
+import '/components/area3_widget.dart';
+
+class MenuAncora extends StatefulWidget {
+  const MenuAncora({
+    super.key,
+    this.width,
+    this.height,
+  });
+
+  final double? width;
+  final double? height;
+
+  @override
+  State<MenuAncora> createState() => _MenuAncoraState();
+}
+
+class _MenuAncoraState extends State<MenuAncora> {
+  final ScrollController _scrollController = ScrollController();
+
+  void _scrollToSection(int sectionIndex) {
+    double position;
+    switch (sectionIndex) {
+      case 0:
+        position = 0;
+        break;
+      case 1:
+        position = MediaQuery.of(context).size.height;
+        break;
+      case 2:
+        position = MediaQuery.of(context).size.height * 2;
+        break;
+      default:
+        position = 0;
+    }
+    _scrollController.animateTo(
+      position,
+      duration: Duration(seconds: 1),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            ElevatedButton(
+              onPressed: () => _scrollToSection(0),
+              child: Text('Area 1'),
+            ),
+            ElevatedButton(
+              onPressed: () => _scrollToSection(1),
+              child: Text('Area 2'),
+            ),
+            ElevatedButton(
+              onPressed: () => _scrollToSection(2),
+              child: Text('Area 3'),
+            ),
+          ],
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            child: Column(
+              children: [
+                Area1Widget(),
+                Area2Widget(),
+                Area3Widget(),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
