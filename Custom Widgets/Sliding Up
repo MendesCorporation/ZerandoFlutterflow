@@ -1,0 +1,125 @@
+// Automatic FlutterFlow imports
+import '/backend/backend.dart';
+import '/backend/schema/structs/index.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/widgets/index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:flutter/material.dart';
+// Begin custom widget code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import '/components/herdado_widget.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
+
+class Sliding extends StatefulWidget {
+  const Sliding({
+    super.key,
+    this.width,
+    this.height,
+  });
+
+  final double? width;
+  final double? height;
+
+  @override
+  State<Sliding> createState() => _SlidingState();
+}
+
+class _SlidingState extends State<Sliding> {
+  final double _initFabHeight = 120.0;
+  double _fabHeight = 0;
+  double _panelHeightOpen = 0;
+  double _panelHeightClosed = 95.0;
+  final PanelController _panelController = PanelController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fabHeight = _initFabHeight;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _panelHeightOpen = MediaQuery.of(context).size.height * .80;
+
+    return Material(
+      child: Stack(
+        alignment: Alignment.topCenter,
+        children: <Widget>[
+          SlidingUpPanel(
+            maxHeight: _panelHeightOpen,
+            minHeight: _panelHeightClosed,
+            parallaxEnabled: true,
+            parallaxOffset: .5,
+            body: _body(),
+            panelBuilder: (sc) => _panel(sc),
+            borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(18.0),
+                topRight: Radius.circular(18.0)),
+            onPanelSlide: (double pos) => setState(() {
+              _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) +
+                  _initFabHeight;
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _panel(ScrollController sc) {
+    return MediaQuery.removePadding(
+      context: context,
+      removeTop: true,
+      child: SingleChildScrollView(
+        controller: sc,
+        child: Column(
+          children: <Widget>[
+            SizedBox(
+              height: 12.0,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  width: 30,
+                  height: 5,
+                  decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.all(Radius.circular(12.0))),
+                ),
+              ],
+            ),
+            SizedBox(
+              height: 18.0,
+            ),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: 5, // Número total de itens na lista
+              itemBuilder: (BuildContext context, int index) {
+                return HerdadoWidget(numero: index);
+              },
+            ),
+            SizedBox(
+              height: 24,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _body() {
+    return Container(
+      color: Colors.blueAccent,
+      child: Center(
+        child: Text(
+          'Conteúdo Principal',
+          style: TextStyle(color: Colors.white, fontSize: 24.0),
+        ),
+      ),
+    );
+  }
+}
