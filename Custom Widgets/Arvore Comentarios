@@ -1,0 +1,132 @@
+// Automatic FlutterFlow imports
+import '/backend/backend.dart';
+import '/backend/schema/structs/index.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/widgets/index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:flutter/material.dart';
+// Begin custom widget code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'package:cloud_firestore_platform_interface/cloud_firestore_platform_interface.dart';
+
+import 'package:comment_tree/comment_tree.dart';
+
+class ArvoreComentarios extends StatefulWidget {
+  const ArvoreComentarios({
+    super.key,
+    this.width,
+    this.height,
+    required this.comentarios,
+    required this.cb,
+  });
+
+  final double? width;
+  final double? height;
+  final List<ComentariosRecord> comentarios;
+  final Future<dynamic> Function(DocumentReference data) cb;
+
+  @override
+  State<ArvoreComentarios> createState() => _ArvoreComentariosState();
+}
+
+class _ArvoreComentariosState extends State<ArvoreComentarios> {
+  List<Map<String, dynamic>> _buildTree(List<ComentariosRecord> comentarios,
+      [DocumentReference? parentRef]) {
+    return comentarios
+        .where((comentario) =>
+            comentario.respRef == parentRef ||
+            (parentRef == null && comentario.respRef == null))
+        .map((comentario) {
+      var children = _buildTree(comentarios, comentario.reference);
+      return {
+        'nome': comentario.nome,
+        'comentario': comentario.comentario,
+        'children': children,
+        'documentReference': comentario.reference,
+      };
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var treeData = _buildTree(widget.comentarios);
+
+    return ListView.builder(
+      itemCount: treeData.length,
+      itemBuilder: (context, index) {
+        return _buildCommentTree(treeData[index], 1);
+      },
+    );
+  }
+
+  Widget _buildCommentTree(Map<String, dynamic> data, int level) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CommentTreeWidget<Map<String, dynamic>, Map<String, dynamic>>(
+          data,
+          data['children'],
+          treeThemeData:
+              TreeThemeData(lineColor: Colors.grey[300]!, lineWidth: 2),
+          avatarRoot: (context, data) => PreferredSize(
+            child: CircleAvatar(
+              child: Text(data['nome'][0]),
+            ),
+            preferredSize: Size.fromRadius(18),
+          ),
+          contentRoot: (context, data) {
+            return CommentWidget(
+              data: data,
+              cb: widget.cb,
+              level: level,
+            );
+          },
+          avatarChild: (context, data) => PreferredSize(
+            child: CircleAvatar(
+              child: Text(data['nome'][0]),
+            ),
+            preferredSize: Size.fromRadius(12),
+          ),
+          contentChild: (context, data) {
+            return CommentWidget(
+              data: data,
+              cb: widget.cb,
+              level: level + 1,
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class CommentWidget extends StatelessWidget {
+  final Map<String, dynamic> data;
+  final Future<dynamic> Function(DocumentReference data) cb;
+  final int level;
+
+  const CommentWidget({
+    required this.data,
+    required this.cb,
+    required this.level,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(data['nome']),
+      subtitle: Text(data['comentario']),
+      trailing: level == 1
+          ? IconButton(
+              icon: Icon(Icons.reply),
+              onPressed: () {
+                cb(data['documentReference']);
+              },
+            )
+          : null,
+    );
+  }
+}
