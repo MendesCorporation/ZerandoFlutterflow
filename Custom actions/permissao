@@ -1,0 +1,36 @@
+// Automatic FlutterFlow imports
+import '/backend/backend.dart';
+import '/backend/schema/structs/index.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/actions/index.dart'; // Imports other custom actions
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:flutter/material.dart';
+// Begin custom action code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:async';
+
+Future<void> permissao() async {
+  await Permission.location.request();
+  final status = await Permission.location.status;
+  FFAppState().update(() {
+    FFAppState().permissao = status == PermissionStatus.granted;
+  });
+
+  Timer.periodic(Duration(seconds: 1), (timer) async {
+    final status = await Permission.location.status;
+    FFAppState().update(() {
+      FFAppState().permissao = status == PermissionStatus.granted;
+    });
+  });
+
+  Permission.location.request().then((status) {
+    FFAppState().update(() {
+      FFAppState().permissao = status == PermissionStatus.granted;
+    });
+  });
+}
+// Set your action name, define your arguments and return parameter,
+// and then add the boilerplate code using the green button on the right!
