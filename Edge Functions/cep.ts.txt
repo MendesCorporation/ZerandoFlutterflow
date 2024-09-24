@@ -1,0 +1,114 @@
+import { serve } from "https://deno.land/std@0.177.1/http/server.ts";
+import { load } from "https://deno.land/std@0.177.1/dotenv/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+  await load({ envPath: "../.env" });
+
+
+// Obter as variáveis de ambiente
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+console.log('Configurando o cliente Supabase...');
+const supabase = createClient(supabaseUrl, supabaseKey);
+console.log('Cliente Supabase configurado.');
+
+interface EnderecoRecord {
+  id: number;
+  cep: string;
+  // Outros campos da tabela 'endereco' se houver
+}
+
+interface WebhookPayload {
+  type: 'INSERT' | 'UPDATE' | 'DELETE';
+  table: string;
+  record: EnderecoRecord;
+  schema: string;
+  old_record: null | EnderecoRecord;
+}
+
+serve(async (req) => {
+  try {
+    console.log('Recebendo requisição...');
+    const payload: WebhookPayload = await req.json();
+    console.log('Payload recebido:', payload);
+
+    const { id, cep } = payload.record;
+    console.log('Dados do registro:', { id, cep });
+
+    // Verificar se o CEP está definido
+    if (!cep) {
+      console.error('CEP não definido no registro.');
+      return new Response(
+        JSON.stringify({ error: 'CEP não definido no registro.' }),
+        { status: 400 }
+      );
+    }
+
+    // Remover caracteres não numéricos do CEP
+    const cepLimpo = cep.replace(/\D/g, '');
+
+    // Fazer a requisição à API ViaCEP
+    const viaCepUrl = `https://viacep.com.br/ws/${cepLimpo}/json/`;
+    console.log('Fazendo requisição à API ViaCEP:', viaCepUrl);
+
+    const response = await fetch(viaCepUrl);
+    if (!response.ok) {
+      console.error('Erro ao chamar a API ViaCEP:', response.statusText);
+      return new Response(
+        JSON.stringify({ error: 'Erro ao chamar a API ViaCEP.' }),
+        { status: 500 }
+      );
+    }
+
+    const dadosEndereco = await response.json();
+    console.log('Dados recebidos da API ViaCEP:', dadosEndereco);
+
+    // Verificar se houve erro na consulta do CEP
+    if (dadosEndereco.erro) {
+      console.error('CEP não encontrado na API ViaCEP.');
+      return new Response(
+        JSON.stringify({ error: 'CEP não encontrado na API ViaCEP.' }),
+        { status: 404 }
+      );
+    }
+
+    // Extrair os campos desejados
+    const rua = dadosEndereco.logradouro || '';
+    const bairro = dadosEndereco.bairro || '';
+    const cidade = dadosEndereco.localidade || '';
+    const estado = dadosEndereco.uf || '';
+
+    // Atualizar o registro na tabela 'endereco'
+    console.log('Atualizando o registro no banco de dados...');
+    const { data, error } = await supabase
+      .from('endereco')
+      .update({ rua, bairro, cidade, estado })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Erro ao atualizar o registro:', error);
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        { status: 500 }
+      );
+    }
+
+    console.log('Registro atualizado com sucesso:', data);
+    return new Response(
+      JSON.stringify({ message: 'Endereço atualizado com sucesso.' }),
+      { status: 200 }
+    );
+
+  } catch (error) {
+    console.error('Erro na função:', error);
+    return new Response(
+      JSON.stringify({
+        error: 'Erro ao processar a solicitação.',
+        details: error.message,
+      }),
+      { status: 500 }
+    );
+  }
+});
+

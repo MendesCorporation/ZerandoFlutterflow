@@ -1,0 +1,78 @@
+import { serve } from "https://deno.land/std@0.177.1/http/server.ts";
+import { load } from "https://deno.land/std@0.177.1/dotenv/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+  await load({ envPath: "../.env" });
+
+
+// Obter as variáveis de ambiente
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+// Configurar o cliente Supabase
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+serve(async (req) => {
+  try {
+    // Verificar se a requisição é POST
+    if (req.method !== 'POST') {
+      return new Response(
+        JSON.stringify({ error: 'Método não permitido. Use POST.' }),
+        { status: 405, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Obter o corpo da requisição
+    const { nome, salario } = await req.json();
+
+    // Validar os dados recebidos
+    if (!nome || salario === undefined) {
+      return new Response(
+        JSON.stringify({ error: 'Nome e salário são obrigatórios.' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Verificar se o salário é um número
+    const salarioNumber = Number(salario);
+    if (isNaN(salarioNumber)) {
+      return new Response(
+        JSON.stringify({ error: 'Salário deve ser um número.' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Determinar a tabela de destino
+    const tabela = salarioNumber > 15000 ? 'super_salarios' : 'salarios';
+
+    // Inserir os dados na tabela apropriada
+    const { data, error } = await supabase
+      .from(tabela)
+      .insert({ nome, salario: salarioNumber });
+
+    if (error) {
+      console.error('Erro ao inserir dados:', error);
+      return new Response(
+        JSON.stringify({ error: 'Erro ao inserir dados no banco de dados.' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Retornar resposta de sucesso
+    return new Response(
+      JSON.stringify({ message: `Dados inseridos na tabela ${tabela}.` }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('Erro na função:', error);
+    return new Response(
+      JSON.stringify({
+        error: 'Erro ao processar a solicitação.',
+        details: error.message,
+      }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+});
+

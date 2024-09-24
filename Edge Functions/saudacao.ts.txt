@@ -1,0 +1,71 @@
+import { serve } from "https://deno.land/std@0.177.1/http/server.ts";
+import { load } from "https://deno.land/std@0.177.1/dotenv/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+interface RecordData {
+  id: number;
+  nome: string;
+  // Adicione outros campos se necessário
+}
+
+interface WebhookPayload {
+  type: 'INSERT' | 'UPDATE' | 'DELETE';
+  table: string;
+  record: RecordData;
+  schema: string;
+  old_record: null | RecordData;
+}
+
+// Carregar as variáveis de ambiente do arquivo .env no diretório anterior
+await load({ envPath: "../.env" });
+
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+console.log('Configurando o cliente Supabase...');
+const supabase = createClient(supabaseUrl, supabaseKey);
+console.log('Cliente Supabase configurado.');
+
+serve(async (req) => {
+  try {
+    console.log('Recebendo requisição...');
+    const payload: WebhookPayload = await req.json();
+    console.log('Payload recebido:', payload);
+
+    const { id, nome } = payload.record;
+    console.log('Dados do registro:', { id, nome });
+
+    // Constrói a mensagem
+    const mensagem = `Hello ${nome}!`;
+    console.log('Mensagem construída:', mensagem);
+
+    // Atualiza o campo 'mensagem' no registro com o ID fornecido
+    console.log('Atualizando o registro no banco de dados...');
+    const { data, error } = await supabase
+      .from('edge')
+      .update({ mensagem })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Erro ao atualizar o registro:', error);
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        { status: 500 }
+      );
+    }
+
+    console.log('Registro atualizado com sucesso:', data);
+    return new Response(
+      JSON.stringify({ message: 'Registro atualizado com sucesso.' }),
+      { status: 200 }
+    );
+
+  } catch (error) {
+    console.error('Erro na função:', error);
+    return new Response(
+      JSON.stringify({ error: 'Erro ao processar a solicitação.', details: error.message }),
+      { status: 500 }
+    );
+  }
+});
+
