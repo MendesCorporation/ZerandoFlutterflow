@@ -1,0 +1,75 @@
+// Automatic FlutterFlow imports
+import '/backend/backend.dart';
+import '/backend/schema/structs/index.dart';
+import '/backend/supabase/supabase.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/actions/index.dart'; // Imports other custom actions
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:flutter/material.dart';
+// Begin custom action code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'dart:async';
+import 'package:supabase/supabase.dart';
+
+// Função auxiliar para encontrar o canal pelo tópico
+// Função auxiliar para encontrar o canal pelo tópico
+RealtimeChannel? findChannelByTopic(
+    List<RealtimeChannel> channels, String topic) {
+  for (final channel in channels) {
+    if (channel.topic == topic) {
+      return channel;
+    }
+  }
+  return null;
+}
+
+Future<bool> realtimePix(String email) async {
+  final supabase = SupaFlow.client;
+  final completer = Completer<bool>();
+
+  final channelName = 'premium_status:$email';
+
+  // Remove qualquer canal existente com o mesmo nome
+  final existingChannels = supabase.getChannels();
+
+  final existingChannel = findChannelByTopic(existingChannels, channelName);
+
+  if (existingChannel != null) {
+    await supabase.removeChannel(existingChannel);
+  }
+
+  // Cria um novo canal
+  final channel = supabase.channel(channelName);
+
+  // Configura a assinatura em tempo real e inscreve-se no canal
+  channel.on(
+    RealtimeListenTypes.postgresChanges,
+    ChannelFilter(
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'usuarios',
+      filter: 'email=eq.$email',
+    ),
+    (payload, [ref]) async {
+      // Acessa o novo registro usando 'payload['new']'
+      final newRecord = payload['new'];
+      if (newRecord != null && newRecord['premium'] == true) {
+        print('Status premium atualizado para true para $email');
+
+        // Desconecta e remove o canal
+        await supabase.removeChannel(channel);
+
+        // Completa o Future com true
+        if (!completer.isCompleted) {
+          completer.complete(true);
+        }
+      }
+    },
+  ).subscribe(); // Chama subscribe() diretamente após on()
+
+  return completer.future;
+}
+// Set your action name, define your arguments and return parameter,
+// and then add the boilerplate code using the green button on the right!
