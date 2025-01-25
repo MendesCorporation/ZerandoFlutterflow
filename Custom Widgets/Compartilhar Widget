@@ -1,0 +1,109 @@
+// Automatic FlutterFlow imports
+import '/backend/backend.dart';
+import '/backend/schema/structs/index.dart';
+import '/backend/supabase/supabase.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/widgets/index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:flutter/material.dart';
+// Begin custom widget code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:typed_data';
+
+class CompartilharComprovante extends StatefulWidget {
+  const CompartilharComprovante({
+    super.key,
+    this.width,
+    this.height,
+    required this.comprovante,
+  });
+
+  final double? width;
+  final double? height;
+  final Widget Function() comprovante;
+
+  @override
+  State<CompartilharComprovante> createState() =>
+      _CompartilharComprovanteState();
+}
+
+class _CompartilharComprovanteState extends State<CompartilharComprovante> {
+  final ScreenshotController _screenshotController = ScreenshotController();
+
+  Future<void> _shareComprovante() async {
+    try {
+      // Definindo constraints para o widget
+      final constraints = BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width,
+      );
+
+      // Envolver o widget com restrições
+      final constrainedWidget = ConstrainedBox(
+        constraints: constraints,
+        child: widget.comprovante(),
+      );
+
+      // Capturar a imagem do widget com restrições adequadas
+      final Uint8List image = await _screenshotController.captureFromLongWidget(
+        Material(
+          type: MaterialType.transparency,
+          child: constrainedWidget,
+        ),
+        //delay: const Duration(seconds: 2),
+        context: context,
+        constraints: constraints,
+      );
+
+      if (image.isNotEmpty) {
+        await Share.shareXFiles([
+          XFile.fromData(image, name: 'comprovante.png', mimeType: 'image/png'),
+        ], text: 'Segue o comprovante.');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao capturar o comprovante.')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao compartilhar: $e')),
+      );
+      print('Erro ao compartilhar: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: widget.width ?? double.infinity,
+      height: widget.height ?? double.infinity,
+      alignment: Alignment.center,
+      child: ElevatedButton(
+        onPressed: _shareComprovante,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: FlutterFlowTheme.of(context).primaryColor,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.share, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              'Compartilhar',
+              style: FlutterFlowTheme.of(context).bodyText1.override(
+                    fontFamily: FlutterFlowTheme.of(context).bodyText1Family,
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
