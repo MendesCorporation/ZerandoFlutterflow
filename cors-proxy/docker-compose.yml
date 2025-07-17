@@ -1,0 +1,6 @@
+version: '3'
+services:
+  cors-proxy:
+    build: .
+    ports:
+      - "3500:3000"
